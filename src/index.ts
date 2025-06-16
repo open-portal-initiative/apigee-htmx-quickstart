@@ -2,8 +2,10 @@
 import express from 'express';
 import { GoogleAuth } from "google-auth-library";
 import { type ApigeeApp, type ApigeeApps, type Error, PortalService } from "apigee-portal-module";
+import { initializeApp } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
 
-const portalService = new PortalService("apigee-hub-demo", "europe-west1");
+const portalService = new PortalService(process.env.GCLOUD_PROJECT ?? "", process.env.REGION ?? "");
 
 const auth = new GoogleAuth({
   scopes: 'https://www.googleapis.com/auth/cloud-platform'
@@ -14,6 +16,7 @@ app.use(express.json()); // for json
 app.use(express.urlencoded({ extended: true })); // for form data
 app.use(express.static('client')); // for static content
 
+const firebaseApp = initializeApp();
 const port = process.env.PORT || 8080;
 
 async function getApps(email: string): Promise<string> {
@@ -192,9 +195,25 @@ app.post('/login', async function(request, response) {
   response.send(resultHtml);
 });
 
-app.get('/developer/:email/apps', async function(request, response) {
+app.get('/user/apps', async function(request, response) {
+  let token = request.headers.authorization?.split(' ')[1];
+  console.log(token);
   
-  let resultHtml = await getApps(request.params.email);
+  if (!token) {
+    response.sendStatus(401);
+    return;
+  }
+
+  let auth = getAuth(firebaseApp);
+  let decodedToken = await auth.verifyIdToken(token);
+  const email = decodedToken.email;
+
+  if (!email) {
+    response.sendStatus(401);
+    return;
+  }
+
+  let resultHtml = await getApps(email);
   response.setHeader('Content-Type', 'text/html');
   response.send(resultHtml);
 });

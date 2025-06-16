@@ -7,6 +7,50 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   </head>
   <body>
+
+    <script src="https://www.gstatic.com/firebasejs/8.0/firebase.js"></script>
+    <script>
+        var config = {
+            apiKey: "AIzaSyBRDeun2QIJhzmr5_10wAUo2azTPBYGjXE",
+            authDomain: "apigee-hub-demo.firebaseapp.com",
+        };
+        firebase.initializeApp(config);
+
+        // get user state
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                window.location.href ="/apps.html";
+            } else {
+                console.log("user logged out");
+                // User is signed out
+                // ...
+            }
+        });
+
+        function signInWithGoogle() {
+            var provider = new firebase.auth.GoogleAuthProvider();
+            firebase.auth().signInWithPopup(provider)
+                .then((result) => {
+                    var credential = result.credential;
+                    // This gives you a Google Access Token. You can use it to access the Google API.
+                    var token = credential.accessToken;
+                    // The signed-in user info.
+                    var user = result.user;
+                }).catch((error) => {
+                    // Handle Errors here.
+                    var errorCode = error.code;
+                    var errorMessage = error.message;
+                    // The email of the user's account used.
+                    var email = error.email;
+                    // The firebase.auth.AuthCredential type that was used.
+                    var credential = error.credential;
+                    console.error(error);
+                    // ...
+                });
+        }        
+    </script>
+
+    <!-- Header -->
     <header>
         <nav class="bg-white border-gray-200 px-4 lg:px-6 py-2.5 dark:bg-gray-800">
             <div class="flex flex-wrap justify-between items-center mx-auto max-w-screen-xl">
@@ -15,7 +59,7 @@
                     <span class="self-center text-xl font-semibold whitespace-nowrap dark:text-white">Apigee htmx Portal</span>
                 </a>
                 <div class="flex items-center lg:order-2">
-                    <a href="#" class="text-gray-800 dark:text-white hover:bg-gray-50 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-4 lg:px-5 py-2 lg:py-2.5 mr-2 dark:hover:bg-gray-700 focus:outline-none dark:focus:ring-gray-800">Log in</a>
+                    <button onclick="signInWithGoogle()" class="text-gray-800 dark:text-white hover:bg-gray-50 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-4 lg:px-5 py-2 lg:py-2.5 mr-2 dark:hover:bg-gray-700 focus:outline-none dark:focus:ring-gray-800">Log in</button>
                     <a href="#" class="text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 lg:px-5 py-2 lg:py-2.5 mr-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800">Get started</a>
                     <button data-collapse-toggle="mobile-menu-2" type="button" class="inline-flex items-center p-2 ml-1 text-sm text-gray-500 rounded-lg lg:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600" aria-controls="mobile-menu-2" aria-expanded="false">
                         <span class="sr-only">Open main menu</span>
@@ -65,7 +109,7 @@
                     </button>
                 </div>
                 <!-- Modal body -->
-                <form hx-post="/login" hx-swap="outerHTML" hx-target="#login-form" hx-indicator="#spinner">
+                <form hx-post="/login" hx-swap="outerHTML" hx-target="#login-form" hx-push-url="/apps" hx-indicator="#spinner">
                     <div class="grid gap-4 mb-4 sm:grid-cols-1">
                         <div>
                             <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Email</label>
